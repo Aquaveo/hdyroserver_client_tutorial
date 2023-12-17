@@ -1,7 +1,8 @@
 from django.shortcuts import render
 from tethys_sdk.routing import controller
 import requests
-
+from django.http import JsonResponse
+import json
 HYDROSERVER_ENDPOINT = 'https://hydroserver.geoglows.org'
 
 @controller
@@ -9,10 +10,10 @@ def home(request):
     """
     Controller for the app home page.
     """
-    headers = {'accept': 'application/json'}
+    
 
-    things_list = get_things(headers)
-    print(things_list)
+    things_list = get_things()
+    # print(things_list)
     context = {
         'things_list': things_list
     }
@@ -21,7 +22,8 @@ def home(request):
 
 
 
-def get_things(headers):
+def get_things():
+    headers = {'accept': 'application/json'}
     things = []
 
     try:
@@ -32,3 +34,36 @@ def get_things(headers):
     except Exception as e:
         print(e)
     return things
+
+@controller
+def get_datastreams(request):
+    datastreams_list={'datastreams':[]}
+    headers = {'accept': 'application/json'}
+    datastream_id = json.load(request)['id']
+    # breakpoint()
+    try:
+        url_datastreams = f'{HYDROSERVER_ENDPOINT}/api/data/things/{datastream_id}/datastreams'
+        response = requests.get(url_datastreams, headers=headers)
+        if response.status_code == 200:
+            datastreams_list['datastreams'] = response.json()
+    except Exception as e:
+        print(e)
+
+    return JsonResponse(datastreams_list)
+
+
+@controller
+def get_observed_values(request):
+    data_list={'data_series':[]}
+    headers = {'accept': 'application/json'}
+    datastream_id = json.load(request)['id']
+    # breakpoint()
+    try:
+        url_observed_Values = f'{HYDROSERVER_ENDPOINT}/api/sensorthings/v1.1/Datastreams({datastream_id})/Observations?$resultFormat=dataArray&$top=1000'
+        response = requests.get(url_observed_Values, headers=headers)
+        if response.status_code == 200:
+            data_list['data_series'] = response.json().get('value',[])[0].get('dataArray',[])
+    except Exception as e:
+        print(e)
+
+    return JsonResponse(data_list)

@@ -10,7 +10,10 @@
 
 {% block app_content %}
 <div id="map"></div>
-
+<div id="popup" class="ol-popup">
+  <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+  <div id="popup-content"></div>
+</div>
 {% endblock %}
 
 {# Use the after_app_content block for modals #}
