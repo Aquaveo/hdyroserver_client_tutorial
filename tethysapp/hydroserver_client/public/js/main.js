@@ -18,6 +18,7 @@
         view: new ol.View({
           center: [0, 0],
           zoom: 2,
+          padding: [170, 100, 100, 150]
         }),
       });
         getThings(map);
@@ -208,7 +209,7 @@
             });
         });
 
-
+        map.getView().fit(vectorLayer.getSource().getExtent())
 
         //https://hydroserver.geoglows.org/api/sensorthings/v1.1/Datastreams(08a4f14a-8930-445a-959e-55a1d0bba41f)/Observations?$resultFormat=dataArray&$top=1000
       };
