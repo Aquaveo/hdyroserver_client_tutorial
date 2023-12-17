@@ -89,7 +89,8 @@
 
 
             map.on('singleclick', evt => {
-                
+                document.getElementById('table-item-metadata').style.display = "none"
+                document.getElementById('title-thing').style.display = "none"
                 const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
                 if (feature === marker) {
                     if(feature.get('type_marker') == 'geoglows'){
@@ -417,6 +418,7 @@
                 if (feature === marker) {
                     if(feature.get('type_marker') == 'geoglows'){
                         document.getElementById('table-item-metadata').style.display = "none"
+                        document.getElementById('title-thing').style.display = "none"
                         fetch(`get-geoglows-forecast/`,{
                             method:'POST',
                             headers:{

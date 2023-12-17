@@ -4,7 +4,10 @@ body {
   margin: 0;
   height: 100%;
 }
-
+.wrapper_buttons{
+    display: flex;
+    gap: 10px;
+}
 .btn-artificial {
     display: inline-block;
     padding: 10px 10px;
@@ -41,6 +44,7 @@ body {
 }
 #lat-lon-id{
     font-size: small;
+    display: none;
 }
 #map {
     position: absolute;
