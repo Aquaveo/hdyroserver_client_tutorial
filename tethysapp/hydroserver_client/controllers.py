@@ -1,11 +1,11 @@
+import requests
+import json
+import geoglows
 from django.shortcuts import render
 from tethys_sdk.routing import controller
-import requests
 from django.http import JsonResponse
-import json
-
-import geoglows
-
+from .model import Geoglows_reach
+from .app import HydroserverClient as app
 
 HYDROSERVER_ENDPOINT = 'https://hydroserver.geoglows.org'
 GEOGLOWS_ENDPOINT ='https://geoglows.ecmwf.int/api'
@@ -17,14 +17,14 @@ def home(request):
     
 
     things_list = get_things()
-    # print(things_list)
+    reaches_list = get_geoglows_reaches()
+
     context = {
-        'things_list': things_list
+        'things_list': things_list,
+        'reach_list': reaches_list
     }
 
     return render(request, 'hydroserver_client/home.html', context)
-
-
 
 def get_things():
     headers = {'accept': 'application/json'}
@@ -84,11 +84,60 @@ def save_geoglows_station(request):
     try:
         model_data = geoglows.streamflow.latlon_to_reach(lat, lon)
         station_obj.update(model_data)
-        # save data into model
+        add_new_region(model_data['reach_id'], model_data['latitude'], model_data['longitude'], model_data['region'], model_data['distance'])
+
     except Exception as e:
         print(e)
     return JsonResponse(station_obj)
 
+
+def add_new_geoglows_reach(reach_id, latitude, longitude, region, distance):
+    """
+    Persist new reach.
+    """
+    
+    # Create new Dam record
+    new_reach = Geoglows_reach(
+        latitude=latitude,
+        longitude=longitude,
+        reach_id=reach_id,
+        region=region,
+        distance=distance,
+    )
+
+    # Get connection/session to database
+    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
+    session = Session()
+
+    # Add the new dam record to the session
+    session.add(new_reach)
+
+    # Commit the session and close the connection
+    session.commit()
+    session.close()
+
+def get_geoglows_reaches():
+    list_reaches = []
+    Session = app.get_persistent_store_database('primary_db', as_sessionmaker=True)
+    session = Session()
+
+    # Query for all dam records
+    reaches = session.query(Geoglows_reach).all()
+    session.close()
+
+    try:
+        for reach in reaches:
+            reach_single = {
+                'reach_id':reach.reach_id,
+                'latitude':reach.latitude,
+                'longitude':reach.longitude,
+                'region':reach.region,
+                'distance':reach.distance
+            }
+            list_reaches.append(reach_single)
+    except Exception as e:
+        print(e)
+    return list_reaches
 
 @controller
 def get_geoglows_forecast(request):
@@ -103,7 +152,6 @@ def get_geoglows_forecast(request):
     try:
         url_feo_values = f'{GEOGLOWS_ENDPOINT}/ForecastStats/'
         response = requests.get(url_feo_values, params=params, headers=headers)
-        breakpoint()
         if response.status_code == 200:
             data_ts = response.json()
             geo_data_dict['time'] = data_ts.get('time_series',{}).get('datetime',[])

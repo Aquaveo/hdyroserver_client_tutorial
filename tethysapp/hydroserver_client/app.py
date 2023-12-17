@@ -1,5 +1,5 @@
 from tethys_sdk.base import TethysAppBase
-
+from tethys_sdk.app_settings import PersistentStoreDatabaseSetting
 
 class HydroserverClient(TethysAppBase):
     """
@@ -16,3 +16,19 @@ class HydroserverClient(TethysAppBase):
     tags = ''
     enable_feedback = False
     feedback_emails = []
+
+    def persistent_store_settings(self):
+        """
+        Define Persistent Store Settings.
+        """
+        ps_settings = (
+            PersistentStoreDatabaseSetting(
+                name='primary_db',
+                description='primary database',
+                initializer='hydroserver_client.model.init_primary_db',
+                required=True
+            ),
+        )
+
+        return ps_settings
+
