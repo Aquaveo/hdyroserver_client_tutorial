@@ -160,7 +160,6 @@
             type: 'Point',
         });
         draw.on('drawend', function(evt){
-            // map.removeInteraction(draw);
             document.getElementById('lat-lon-id').innerHTML = `Coordinates: ${ol.proj.transform(evt.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326')}`;
             map.removeInteraction(draw);
         },this);
