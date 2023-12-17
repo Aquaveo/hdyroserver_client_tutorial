@@ -50,12 +50,12 @@ tethys<span class="w"> </span>install<span class="w"> </span>-d
 </pre></div>
 </div>
 <p>The following will create a start up project, that we will need to clean, please copy the following contents to the following files:
-the <cite>home.html</cite> should be the following:</p>
+The <cite>home.html</cite> should be the following:</p>
 <div class="highlight-html notranslate"><div class="highlight"><pre><span></span>{% extends &quot;hydroserver_client/base.html&quot; %}
 
 {% block header_buttons %}
 <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;header-button glyphicon-button&quot;</span> <span class="na">data-bs-toggle</span><span class="o">=</span><span class="s">&quot;tooltip&quot;</span> <span class="na">data-bs-placement</span><span class="o">=</span><span class="s">&quot;bottom&quot;</span> <span class="na">title</span><span class="o">=</span><span class="s">&quot;Help&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">a</span> <span class="na">data-bs-toggle</span><span class="o">=</span><span class="s">&quot;modal&quot;</span> <span class="na">data-bs-target</span><span class="o">=</span><span class="s">&quot;#help-modal&quot;</span><span class="p">&gt;&lt;</span><span class="nt">i</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;bi bi-question-circle&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">i</span><span class="p">&gt;&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">a</span> <span class="na">data-bs-toggle</span><span class="o">=</span><span class="s">&quot;modal&quot;</span> <span class="na">data-bs-target</span><span class="o">=</span><span class="s">&quot;#help-modal&quot;</span><span class="p">&gt;&lt;</span><span class="nt">i</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;bi bi-question-circle&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">i</span><span class="p">&gt;&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 {% endblock %}
 
@@ -67,23 +67,23 @@ the <cite>home.html</cite> should be the following:</p>
 {% block after_app_content %}
 <span class="cm">&lt;!-- Example Modal --&gt;</span>
 <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal fade&quot;</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;help-modal&quot;</span> <span class="na">tabindex</span><span class="o">=</span><span class="s">&quot;-1&quot;</span> <span class="na">role</span><span class="o">=</span><span class="s">&quot;dialog&quot;</span> <span class="na">aria-labelledby</span><span class="o">=</span><span class="s">&quot;help-modal-label&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-dialog&quot;</span> <span class="na">role</span><span class="o">=</span><span class="s">&quot;document&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-content&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-header&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">h5</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-title&quot;</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;help-modal-label&quot;</span><span class="p">&gt;</span>Example Modal<span class="p">&lt;/</span><span class="nt">h5</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">button</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;button&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;btn-close&quot;</span> <span class="na">data-bs-dismiss</span><span class="o">=</span><span class="s">&quot;modal&quot;</span> <span class="na">aria-label</span><span class="o">=</span><span class="s">&quot;Close&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-body&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>You can add custom buttons to the app header using the <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>header_buttons<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span> block. Use anchor/link tags for the button and wrap it in a div with the class <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>header-button<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span>. For buttons with the gliphyicons, add the <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>glyphicon-button<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span> class as well.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Ever have trouble using a modal in a Tethys app? Use the <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>after_app_content<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span> block for modal content to allow them to function properly. See: <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://getbootstrap.com/docs/5.1/components/modal/&quot;</span><span class="p">&gt;</span>Bootstrap Modals<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Add tooltips to any element by adding the <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>data-bs-toggle<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span>, <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>data-bs-placement<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span>, and <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>title<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span> attributes to the button. See: <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://getbootstrap.com/docs/5.1/components/tooltips/&quot;</span><span class="p">&gt;</span>Bootstrap Tooltips<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-footer&quot;</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">button</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;button&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;btn btn-secondary&quot;</span> <span class="na">data-bs-dismiss</span><span class="o">=</span><span class="s">&quot;modal&quot;</span><span class="p">&gt;</span>Cancel<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
-<span class="p">&lt;</span><span class="nt">button</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;button&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;btn btn-primary&quot;</span> <span class="na">data-bs-dismiss</span><span class="o">=</span><span class="s">&quot;modal&quot;</span><span class="p">&gt;</span>OK<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
-<span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-dialog&quot;</span> <span class="na">role</span><span class="o">=</span><span class="s">&quot;document&quot;</span><span class="p">&gt;</span>
+    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-content&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-header&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">h5</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-title&quot;</span> <span class="na">id</span><span class="o">=</span><span class="s">&quot;help-modal-label&quot;</span><span class="p">&gt;</span>Example Modal<span class="p">&lt;/</span><span class="nt">h5</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">button</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;button&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;btn-close&quot;</span> <span class="na">data-bs-dismiss</span><span class="o">=</span><span class="s">&quot;modal&quot;</span> <span class="na">aria-label</span><span class="o">=</span><span class="s">&quot;Close&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-body&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>You can add custom buttons to the app header using the <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>header_buttons<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span> block. Use anchor/link tags for the button and wrap it in a div with the class <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>header-button<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span>. For buttons with the gliphyicons, add the <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>glyphicon-button<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span> class as well.<span class="p">&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Ever have trouble using a modal in a Tethys app? Use the <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>after_app_content<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span> block for modal content to allow them to function properly. See: <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://getbootstrap.com/docs/5.1/components/modal/&quot;</span><span class="p">&gt;</span>Bootstrap Modals<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">p</span><span class="p">&gt;</span>Add tooltips to any element by adding the <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>data-bs-toggle<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span>, <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>data-bs-placement<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span>, and <span class="p">&lt;</span><span class="nt">code</span><span class="p">&gt;</span>title<span class="p">&lt;/</span><span class="nt">code</span><span class="p">&gt;</span> attributes to the button. See: <span class="p">&lt;</span><span class="nt">a</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;https://getbootstrap.com/docs/5.1/components/tooltips/&quot;</span><span class="p">&gt;</span>Bootstrap Tooltips<span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;&lt;/</span><span class="nt">p</span><span class="p">&gt;</span>
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;modal-footer&quot;</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">button</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;button&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;btn btn-secondary&quot;</span> <span class="na">data-bs-dismiss</span><span class="o">=</span><span class="s">&quot;modal&quot;</span><span class="p">&gt;</span>Cancel<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+        <span class="p">&lt;</span><span class="nt">button</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;button&quot;</span> <span class="na">class</span><span class="o">=</span><span class="s">&quot;btn btn-primary&quot;</span> <span class="na">data-bs-dismiss</span><span class="o">=</span><span class="s">&quot;modal&quot;</span><span class="p">&gt;</span>OK<span class="p">&lt;/</span><span class="nt">button</span><span class="p">&gt;</span>
+        <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+    <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 <span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
 {% endblock %}
 
@@ -92,52 +92,86 @@ the <cite>home.html</cite> should be the following:</p>
 {% endblock %}
 </pre></div>
 </div>
-<p>To install the project, follow these steps:</p>
-<ol class="arabic">
-<li><p>Clone the repository from GitHub:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Aquaveo/hdyroserver_client_tutorial.git
+<p>The <cite>base.html</cite> should be the following:</p>
+<div class="highlight-html notranslate"><div class="highlight"><pre><span></span>{% extends &quot;tethys_apps/app_base.html&quot; %}
+
+{% load static %}
+
+{% block title %}{{ tethys_app.name }}{% endblock %}
+
+{% block app_icon %}
+{# The path you provided in your app.py is accessible through the tethys_app.icon context variable #}
+<span class="p">&lt;</span><span class="nt">img</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;{% if &#39;http&#39; in tethys_app.icon %}{{ tethys_app.icon }}{% else %}{% static tethys_app.icon %}{% endif %}&quot;</span> <span class="p">/&gt;</span>
+{% endblock %}
+
+{# The name you provided in your app.py is accessible through the tethys_app.name context variable #}
+{% block app_title %}{{ tethys_app.name }}{% endblock %}
+
+{% block app_navigation_items %}
+
+{% endblock %}
+
+{% block app_content %}
+{% endblock %}
+
+{% block app_actions %}
+{% endblock %}
+
+{% block content_dependent_styles %}
+{{ block.super }}
+<span class="p">&lt;</span><span class="nt">link</span> <span class="na">href</span><span class="o">=</span><span class="s">&quot;{% static &#39;hydroserver_client/css/main.css&#39; %}&quot;</span> <span class="na">rel</span><span class="o">=</span><span class="s">&quot;stylesheet&quot;</span><span class="p">/&gt;</span>
+{% endblock %}
+
+{% block scripts %}
+{{ block.super }}
+<span class="p">&lt;</span><span class="nt">script</span> <span class="na">src</span><span class="o">=</span><span class="s">&quot;{% static &#39;hydroserver_client/js/main.js&#39; %}&quot;</span> <span class="na">type</span><span class="o">=</span><span class="s">&quot;text/javascript&quot;</span><span class="p">&gt;&lt;/</span><span class="nt">script</span><span class="p">&gt;</span>
+{% endblock %}
 </pre></div>
 </div>
-</li>
-<li><p>Navigate to the project directory:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nb">cd</span><span class="w"> </span>your_project
+<p>The <cite>controllers.py</cite> should be the following:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+<span class="kn">from</span> <span class="nn">tethys_sdk.routing</span> <span class="kn">import</span> <span class="n">controller</span>
+
+<span class="nd">@controller</span>
+<span class="k">def</span> <span class="nf">home</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Controller for the app home page.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
+
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;hydroserver_client/home.html&#39;</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
 </pre></div>
 </div>
-</li>
-<li><p>Install dependencies using pip:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip<span class="w"> </span>install<span class="w"> </span>-r<span class="w"> </span>requirements.txt
-</pre></div>
-</div>
-</li>
+</section>
+<section id="adding-hydroserver-things">
+<h2>Adding HydroServer Things<a class="headerlink" href="#adding-hydroserver-things" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>First we need to add a map</p></li>
+<li><p>Call the HydroServer API</p></li>
 </ol>
 </section>
-<section id="usage">
-<h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">¶</a></h2>
-<p>To use the project:</p>
-<ol class="arabic">
-<li><p>Run the main script:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python<span class="w"> </span>main.py
-</pre></div>
-</div>
-</li>
-<li><p>Follow the on-screen instructions.</p></li>
+<section id="adding-timeseries-for-hydroserver">
+<h2>Adding TimeSeries for HydroServer<a class="headerlink" href="#adding-timeseries-for-hydroserver" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Making markers interactive</p></li>
+<li><p>Calling the API</p></li>
 </ol>
 </section>
-<section id="configuration">
-<h2>Configuration<a class="headerlink" href="#configuration" title="Link to this heading">¶</a></h2>
-<p>The project configuration can be customized by editing the <cite>config.ini</cite> file.</p>
+<section id="saving-geoglows-reach-id">
+<h2>Saving GEOGLoWS reach_id<a class="headerlink" href="#saving-geoglows-reach-id" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Making the map interactive</p></li>
+<li><p>Creating a database and saving data</p></li>
+</ol>
 </section>
-<section id="contributing">
-<h2>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h2>
-<p>If you want to contribute to this project, please follow the guidelines in the <cite>CONTRIBUTING.md</cite> file.</p>
-</section>
-<section id="credits">
-<h2>Credits<a class="headerlink" href="#credits" title="Link to this heading">¶</a></h2>
-<p>This project was created by [Your Name](<a class="reference external" href="https://github.com/your_username">https://github.com/your_username</a>).</p>
-</section>
-<section id="license">
-<h2>License<a class="headerlink" href="#license" title="Link to this heading">¶</a></h2>
-<p>This project is licensed under the MIT License. See the <cite>LICENSE</cite> file for details.</p>
+<section id="adding-forecast-timeseries-to-the-geoglows-reach-id">
+<h2>Adding Forecast TimeSeries to the GeoGlows Reach id<a class="headerlink" href="#adding-forecast-timeseries-to-the-geoglows-reach-id" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Making map interactive</p></li>
+<li><p>Calling the service</p></li>
+</ol>
 </section>
 </section>
 
@@ -163,11 +197,10 @@ the <cite>home.html</cite> should be the following:</p>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Tutorial</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#requirements">Requirements</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting Started</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#configuration">Configuration</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#contributing">Contributing</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#credits">Credits</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#license">License</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-hydroserver-things">Adding HydroServer Things</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-timeseries-for-hydroserver">Adding TimeSeries for HydroServer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#saving-geoglows-reach-id">Saving GEOGLoWS reach_id</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#adding-forecast-timeseries-to-the-geoglows-reach-id">Adding Forecast TimeSeries to the GeoGlows Reach id</a></li>
 </ul>
 </li>
 </ul>
