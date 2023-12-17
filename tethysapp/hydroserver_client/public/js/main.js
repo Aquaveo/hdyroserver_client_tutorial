@@ -6,16 +6,22 @@
       }
       
     const csrftoken = getCookie('csrftoken');
-    const makeVectorLayerForMaker = (map) =>{
+
+    const makeVectorLayerForMaker = (map,type_marker) =>{
         // Assuming 'map' is your OpenLayers map
         const vectorLayer = new ol.layer.Vector({
             source: new ol.source.Vector(),
             style: new ol.style.Style({
                 image: new ol.style.Circle({
-                    radius: 5,
-                    fill: new ol.style.Fill({
-                    color: '#8e44ad',
-                    }),
+                    radius: 7,
+                    fill: type_marker== 'geoglows'? 
+                        new ol.style.Fill({
+                            color: '#72B01D',
+                        }):
+                        new ol.style.Fill({
+                            color: '#8e44ad',
+                        })
+                    ,
                     stroke: new ol.style.Stroke({
                     color: 'white',
                     width: 1,
@@ -50,7 +56,7 @@
         
         let coordinateString = document.getElementById('lat-lon-id').textContent;
         const [lon, lat] = coordinateString.split(',');
-
+        if(!coordinateString){return}
 
         fetch(`save-geoglows-station/`,{
             method:'POST',
@@ -69,7 +75,7 @@
         .then(data => {
 
 
-            const vectorLayer = makeVectorLayerForMaker(map);
+            const vectorLayer = makeVectorLayerForMaker(map,'geoglows');
             const marker = new ol.Feature({
                 geometry: new ol.geom.Point(
                     ol.proj.fromLonLat([data.longitude, data.latitude])
@@ -160,7 +166,7 @@
             type: 'Point',
         });
         draw.on('drawend', function(evt){
-            document.getElementById('lat-lon-id').innerHTML = `Coordinates: ${ol.proj.transform(evt.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326')}`;
+            document.getElementById('lat-lon-id').innerHTML = `${ol.proj.transform(evt.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326')}`;
             map.removeInteraction(draw);
         },this);
         map.addInteraction(draw);
@@ -273,7 +279,7 @@
         const thingsListParsedData = JSON.parse(thingsListSerializedData);
 
         // Assuming 'map' is your OpenLayers map
-        const vectorLayer = makeVectorLayerForMaker(map);
+        const vectorLayer = makeVectorLayerForMaker(map,'hydroserver');
    
 
         map.on('pointermove', evt => {
@@ -387,7 +393,7 @@
         const reachessListParsedData = JSON.parse(reachesListSerializedData);
 
         // Assuming 'map' is your OpenLayers map
-        const vectorLayer = makeVectorLayerForMaker(map);
+        const vectorLayer = makeVectorLayerForMaker(map,'geoglows');
         map.on('pointermove', evt => {
             if (!evt.dragging) {
               map.getTargetElement().style.cursor = map.hasFeatureAtPixel(map.getEventPixel(evt.originalEvent)) ? 'pointer' : '';
