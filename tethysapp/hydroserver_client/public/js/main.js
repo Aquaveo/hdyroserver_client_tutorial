@@ -52,7 +52,6 @@
                 }
               ];
                             
-              // Parse the data to Chart.js format
               ts_data.forEach(([dateStr, value]) => {
                 const date = new Date(dateStr);
                 data_element[0]['x'].push(date.toISOString().slice(0, 10)); 
@@ -164,22 +163,16 @@
                                               </form>
                                               <br>
                                               <div id="ts_chart"></div>`
-                                              ;
-                      
-                    // popupContent += radio_btn
-                    
-                      
+                                              ;              
                       const popup = new ol.Overlay({
                           element: document.getElementById('popup'),
                           positioning: 'bottom-center',
                           stopEvent: false,
-                          offset: [0, -50]
+                          offset: [0, -10]
                       });
                       map.addOverlay(popup);
                       popup.setPosition(coordinates);
                       document.getElementById('popup-content').innerHTML = popupContent;
-
-
 
                       var closer = document.getElementById('popup-closer');
                       closer.onclick = function() {
@@ -210,8 +203,6 @@
         });
 
         map.getView().fit(vectorLayer.getSource().getExtent())
-
-        //https://hydroserver.geoglows.org/api/sensorthings/v1.1/Datastreams(08a4f14a-8930-445a-959e-55a1d0bba41f)/Observations?$resultFormat=dataArray&$top=1000
       };
 
 
