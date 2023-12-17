@@ -3,8 +3,12 @@ from tethys_sdk.routing import controller
 import requests
 from django.http import JsonResponse
 import json
-HYDROSERVER_ENDPOINT = 'https://hydroserver.geoglows.org'
 
+import geoglows
+
+
+HYDROSERVER_ENDPOINT = 'https://hydroserver.geoglows.org'
+GEOGLOWS_ENDPOINT ='https://geoglows.ecmwf.int/api'
 @controller
 def home(request):
     """
@@ -67,3 +71,44 @@ def get_observed_values(request):
         print(e)
 
     return JsonResponse(data_list)
+
+@controller
+def save_geoglows_station(request):
+    request_data = json.load(request)
+    lat = float(request_data['lat'])
+    lon = float(request_data['lon'])
+    station_obj={
+        'latitude':lat,
+        'longitude': lon
+    }
+    try:
+        model_data = geoglows.streamflow.latlon_to_reach(lat, lon)
+        station_obj.update(model_data)
+        # save data into model
+    except Exception as e:
+        print(e)
+    return JsonResponse(station_obj)
+
+
+@controller
+def get_geoglows_forecast(request):
+    geo_data_dict = {
+        'time':[],
+        'values':[]
+    }
+    request_data = json.load(request)
+    reach_id = int(request_data['reach_id'])
+    headers = {'accept': 'application/json'}
+    params = {"reach_id": reach_id, "return_format": "json"}
+    try:
+        url_feo_values = f'{GEOGLOWS_ENDPOINT}/ForecastStats/'
+        response = requests.get(url_feo_values, params=params, headers=headers)
+        breakpoint()
+        if response.status_code == 200:
+            data_ts = response.json()
+            geo_data_dict['time'] = data_ts.get('time_series',{}).get('datetime',[])
+            geo_data_dict['values'] = data_ts.get('time_series',{}).get('flow_25%_m^3/s',[])
+
+    except Exception as e:
+        print(e)
+    return JsonResponse(geo_data_dict)
