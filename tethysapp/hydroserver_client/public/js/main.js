@@ -25,7 +25,7 @@
 
     };
 
-    function fetchData(option) {
+    const fetchData = (option) => {
         fetch(`get-observed-values/`, {
           method: 'POST',
           headers: {
@@ -66,6 +66,25 @@
             // Handle errors if any
           });
     }
+
+    const makeTableData = (thing)=>{
+        const keys = Object.keys(thing);
+        for (const key of keys) {
+
+          let id_table = `id-${key}`;
+          console.log(id_table)
+          const element = document.getElementById(id_table);
+          if (element) {
+            let elementContent = thing[key]
+            if(key =='isPrivate'){
+                elementContent = elementContent ? 'Private' : 'Public'
+            }
+            element.innerHTML = elementContent;
+            
+          }
+        }
+    }
+
     const getThings = (map) => {
 
         const thingsListSerializedData = document.getElementById('things-list').textContent;
@@ -128,6 +147,7 @@
             map.on('singleclick', evt => {
                 const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
                 if (feature === marker) {
+                    makeTableData(item);
                     fetch(`get-datastreams/`,{
                         method:'POST',
                         headers:{
@@ -143,7 +163,10 @@
                       return response.json();
                     })
                     .then(data => {
-                        console.log(data)
+                     document.getElementById('table-item-metadata').style.display = "block"
+                     document.getElementById("prompt-click").style.display = "none";
+                     document.getElementById('title-thing').innerHTML =  item.name;
+
                       let data_streams = data['datastreams'];
                       let radio_btn = ``
                       data_streams.forEach((datastream_item)=>{
@@ -151,11 +174,11 @@
                         <label for="${datastream_item.id}">${datastream_item.description.split('-')[0]}</label><br>`
                       })
                       const coordinates = feature.getGeometry().getCoordinates();
-                      const popupContent = `<p><strong>${feature.get('name')}</strong></p>
+                      const popupContent = `<h3><strong>${feature.get('name')}</strong></h3>
                                               <p>${feature.get('description')}</p>
                                               <form>
                                                 <fieldset>
-                                                 </legend>Datastreams</legend>
+                                                 </legend><strong>Datastreams</strong></legend>
                                                  <div>
                                                    ${radio_btn}
                                                  </div>
@@ -203,7 +226,7 @@
         });
 
         map.getView().fit(vectorLayer.getSource().getExtent())
-      };
+    };
 
 
     initializeMap();

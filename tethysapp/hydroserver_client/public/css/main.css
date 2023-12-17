@@ -4,7 +4,19 @@ body {
   margin: 0;
   height: 100%;
 }
+.items-wrapper{
+    margin-top: 10px;
 
+}
+#table-item-metadata{
+    margin-top: 10px;
+    display: none;
+}
+
+.table-sm{
+    margin-top: 10px;
+    font-size: small;
+}
 #map {
     position: absolute;
     top: 50px;

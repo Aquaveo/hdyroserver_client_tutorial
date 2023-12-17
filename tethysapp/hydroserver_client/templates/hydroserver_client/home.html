@@ -8,6 +8,59 @@
   </div>
 {% endblock %}
 
+
+{% block app_navigation_items %}
+<div class="items-wrapper">
+  <h4 id="title-thing">
+    Metadata
+  </h4>
+  <p id="prompt-click">
+    Please click on a station to see data, and explore the time series of its variables
+  </p>
+  <table id="table-item-metadata" class="table-sm">
+    <tbody>
+  
+      <tr>
+        <td><i class="fas fa-barcode" aria-hidden="true"></i><span>Site Code</span></td>
+        <td id="id-samplingFeatureCode"></td>
+      </tr>
+      <tr>
+        <td><i class="fas fa-map" aria-hidden="true"></i><span>Latitude</span></td>
+        <td id="id-latitude"></td>
+      </tr>
+      <tr>
+        <td><i class="fas fa-map" aria-hidden="true"></i><span>Longitude</span></td>
+        <td id="id-longitude"></td>
+      </tr>
+      <tr>
+        <td><i class="fas fa-mountain" aria-hidden="true"></i><span>Elevation (m)</span></td>
+        <td id="id-elevation_m"></td>
+      </tr>
+      <tr>
+        <td><i class="fas fa-map-pin" aria-hidden="true"></i><span>Site Type</span></td>
+        <td id="id-samplingFeatureType"></td>
+      </tr>
+      <tr>
+        <td><i class="fas fa-flag-usa" aria-hidden="true"></i><span>State</span></td>
+        <td id="id-state"></td>
+      </tr>
+      <tr>
+        <td><i class="fas fa-flag-usa" aria-hidden="true"></i><span>County</span></td>
+        <td id="id-county"></td>
+      </tr>
+      <tr>
+        <td><i class="fas fa-globe" aria-hidden="true"></i><span>Privacy</span></td>
+        <td id="id-isPrivate"></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+{% endblock %}
+
+
+
 {% block app_content %}
 <div id="map"></div>
 <div id="popup" class="ol-popup">
