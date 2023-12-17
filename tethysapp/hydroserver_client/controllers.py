@@ -74,6 +74,7 @@ def get_observed_values(request):
 
 @controller
 def save_geoglows_station(request):
+    # breakpoint()
     request_data = json.load(request)
     lat = float(request_data['lat'])
     lon = float(request_data['lon'])
@@ -84,7 +85,7 @@ def save_geoglows_station(request):
     try:
         model_data = geoglows.streamflow.latlon_to_reach(lat, lon)
         station_obj.update(model_data)
-        add_new_region(model_data['reach_id'], model_data['latitude'], model_data['longitude'], model_data['region'], model_data['distance'])
+        add_new_geoglows_reach(station_obj['reach_id'], station_obj['latitude'], station_obj['longitude'], station_obj['region'], station_obj['distance'])
 
     except Exception as e:
         print(e)
@@ -95,7 +96,7 @@ def add_new_geoglows_reach(reach_id, latitude, longitude, region, distance):
     """
     Persist new reach.
     """
-    
+    # breakpoint()
     # Create new Dam record
     new_reach = Geoglows_reach(
         latitude=latitude,

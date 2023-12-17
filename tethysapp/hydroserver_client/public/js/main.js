@@ -46,11 +46,11 @@
         return vectorLayer
     }
 
-    const saveStation = (map,draw) =>{
+    const saveStation = (map) =>{
         
         let coordinateString = document.getElementById('lat-lon-id').textContent;
         const [lon, lat] = coordinateString.split(',');
-        console.log(lon,lat)
+
 
         fetch(`save-geoglows-station/`,{
             method:'POST',
@@ -67,8 +67,8 @@
           return response.json();
         })
         .then(data => {
-            console.log(data);
-            map.removeInteraction(draw);
+
+
             const vectorLayer = makeVectorLayerForMaker(map);
             const marker = new ol.Feature({
                 geometry: new ol.geom.Point(
@@ -80,7 +80,7 @@
                 type_marker:'geoglows'
             });
             vectorLayer.getSource().addFeature(marker);
-            map.removeInteraction(draw);
+
 
             map.on('singleclick', evt => {
                 
@@ -103,7 +103,7 @@
                           return response.json();
                         })
                         .then(data => {
-                          console.log(data)
+
     
                           const coordinates = feature.getGeometry().getCoordinates();
                           const popupContent = `<h3><strong>Reach ID - ${feature.get('reach_id')}</strong></h3>
@@ -161,7 +161,7 @@
         });
         draw.on('drawend', function(evt){
             // map.removeInteraction(draw);
-            document.getElementById('lat-lon-id').innerHTML = ol.proj.transform(evt.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326');
+            document.getElementById('lat-lon-id').innerHTML = `Coordinates: ${ol.proj.transform(evt.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326')}`;
             map.removeInteraction(draw);
         },this);
         map.addInteraction(draw);
@@ -192,7 +192,8 @@
         getThings(map);
         getReaches(map);
         
-        document.getElementById('btn-add-station').addEventListener('click',function(){
+        document.getElementById('btn-add-station').addEventListener('click',function(event){
+            event.preventDefault();
             var features = source_draw.getFeatures();
             var lastFeature = features[features.length - 1];
             source_draw.removeFeature(lastFeature);
@@ -200,7 +201,10 @@
         })
         document.getElementById('btn-save-station').addEventListener('click',function(event){
             event.preventDefault();
-            saveStation(map,draw)
+            var features = source_draw.getFeatures();
+            var lastFeature = features[features.length - 1];
+            source_draw.removeFeature(lastFeature);
+            saveStation(map)
         })
     };
 
@@ -220,7 +224,7 @@
             return response.json();
           })
           .then(data => {
-            console.log(data)
+
             let ts_data = data['data_series']
 
             var data_element = [
@@ -251,7 +255,7 @@
         for (const key of keys) {
 
           let id_table = `id-${key}`;
-          console.log(id_table)
+
           const element = document.getElementById(id_table);
           if (element) {
             let elementContent = thing[key]
@@ -352,9 +356,9 @@
                           };
     
                             document.querySelectorAll('input[name="datastreams"]').forEach(radio => {
-                                console.log(radio)
+
                                 radio.addEventListener('change', event => {
-                                    console.log("asfgasg")
+  
                                 if (event.target.checked) {
                                     fetchData(event.target.value);
                                 }
@@ -393,11 +397,11 @@
         reachessListParsedData.forEach(item => {
             const marker = new ol.Feature({
                 geometry: new ol.geom.Point(
-                    ol.proj.fromLonLat([data.longitude, data.latitude])
+                    ol.proj.fromLonLat([item.longitude, item.latitude])
                 ),
-                distance: data.distance,
-                reach_id: data.reach_id,
-                region: data.region,
+                distance: item.distance,
+                reach_id: item.reach_id,
+                region: item.region,
                 type_marker:'geoglows'
             });
             
@@ -407,7 +411,7 @@
                 const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
                 if (feature === marker) {
                     if(feature.get('type_marker') == 'geoglows'){
-
+                        document.getElementById('table-item-metadata').style.display = "none"
                         fetch(`get-geoglows-forecast/`,{
                             method:'POST',
                             headers:{
@@ -423,7 +427,7 @@
                           return response.json();
                         })
                         .then(data => {
-                          console.log(data)
+
     
                           const coordinates = feature.getGeometry().getCoordinates();
                           const popupContent = `<h3><strong>Reach ID - ${feature.get('reach_id')}</strong></h3>
