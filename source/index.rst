@@ -9,7 +9,8 @@ Welcome to HydroClient Tutorial's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
+   
+   firstPart
 
 
 Indices and tables
