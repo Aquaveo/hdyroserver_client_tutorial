@@ -191,8 +191,6 @@
       });
         getThings(map);
         
-
-        
         document.getElementById('btn-add-station').addEventListener('click',function(){
             var features = source_draw.getFeatures();
             var lastFeature = features[features.length - 1];
