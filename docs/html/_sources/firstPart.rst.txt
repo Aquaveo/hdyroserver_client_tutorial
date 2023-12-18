@@ -682,7 +682,8 @@ Check out answer with
 Adding TimeSeries for HydroServer
 ---------------------------------
 
-1. First we need to add the CDN dependencie for Plotly.js in the `base.html` 
+1. First we need to add the CDN dependencie for Plotly.js in the `base.html`
+   
 .. code-block:: html
 
 
