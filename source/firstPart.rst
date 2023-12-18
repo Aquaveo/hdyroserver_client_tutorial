@@ -22,7 +22,8 @@ Please create an scaffold of the app using the following command:
 
     conda activate tethys
     tethys scaffold hydroserver_client
-    tethys install -d
+    pip install geoglows
+    tethys install -d -w
 
 
 The following will create a start up project, that we will need to clean, please copy the following contents to the following files:
