@@ -689,10 +689,397 @@ git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </
 </section>
 <section id="adding-timeseries-for-hydroserver">
 <h2>Adding TimeSeries for HydroServer<a class="headerlink" href="#adding-timeseries-for-hydroserver" title="Link to this heading">¶</a></h2>
+<p>1. First we need to add the CDN dependencie for Plotly.js in the <cite>base.html</cite>
+.. code-block:: html</p>
+<blockquote>
+<div><p>{% extends “tethys_apps/app_base.html” %}</p>
+<p>{% load static %}</p>
+<p>{% block title %}{{ tethys_app.name }}{% endblock %}</p>
+<p>{% block app_icon %}
+{# The path you provided in your app.py is accessible through the tethys_app.icon context variable #}
+&lt;img src=”{% if ‘http’ in tethys_app.icon %}{{ tethys_app.icon }}{% else %}{% static tethys_app.icon %}{% endif %}” /&gt;
+{% endblock %}</p>
+<p>{# The name you provided in your app.py is accessible through the tethys_app.name context variable #}
+{% block app_title %}{{ tethys_app.name }}{% endblock %}</p>
+<p>{% block app_navigation_items %}
+{% endblock %}</p>
+<p>{% block app_content %}
+{% endblock %}</p>
+<p>{% block app_actions %}
+{% endblock %}</p>
+<p>{% block content_dependent_styles %}
+{{ block.super }}
+&lt;link rel=”stylesheet” href=”<a class="reference external" href="https://cdn.jsdelivr.net/npm/ol&#64;v8.2.0/ol.css">https://cdn.jsdelivr.net/npm/ol&#64;v8.2.0/ol.css</a>”&gt;
+&lt;link rel=”stylesheet” href=”<a class="reference external" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css</a>” integrity=”sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==” crossorigin=”anonymous” referrerpolicy=”no-referrer” /&gt;
+&lt;link href=”{% static ‘hydroserver_client/css/main.css’ %}” rel=”stylesheet”/&gt;
+{% endblock %}</p>
+<p>{% block scripts %}
+{{ block.super }}
+&lt;script src=”<a class="reference external" href="https://cdn.jsdelivr.net/npm/ol&#64;v8.2.0/dist/ol.js">https://cdn.jsdelivr.net/npm/ol&#64;v8.2.0/dist/ol.js</a>”&gt;&lt;/script&gt;
+&lt;script src=”<a class="reference external" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js">https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js</a>” integrity=”sha512-GWzVrcGlo0TxTRvz9ttioyYJ+Wwk9Ck0G81D+eO63BaqHaJ3YZX9wuqjwgfcV/MrB2PhaVX9DkYVhbFpStnqpQ==” crossorigin=”anonymous” referrerpolicy=”no-referrer”&gt;&lt;/script&gt;
+&lt;script src=’<a class="reference external" href="https://cdn.plot.ly/plotly-2.27.0.min.js'">https://cdn.plot.ly/plotly-2.27.0.min.js’</a>&gt;&lt;/script&gt;</p>
+<p>{% endblock %}</p>
+</div></blockquote>
 <ol class="arabic simple">
-<li><p>Making markers interactive</p></li>
-<li><p>Calling the API</p></li>
+<li><p>Add the following function in the <cite>controllers.py</cite> to retrieve the observed values</p></li>
 </ol>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">requests</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">django.shortcuts</span> <span class="kn">import</span> <span class="n">render</span>
+<span class="kn">from</span> <span class="nn">tethys_sdk.routing</span> <span class="kn">import</span> <span class="n">controller</span>
+<span class="kn">from</span> <span class="nn">django.http</span> <span class="kn">import</span> <span class="n">JsonResponse</span>
+
+
+<span class="n">HYDROSERVER_ENDPOINT</span> <span class="o">=</span> <span class="s1">&#39;https://hydroserver.geoglows.org&#39;</span>
+<span class="n">GEOGLOWS_ENDPOINT</span> <span class="o">=</span><span class="s1">&#39;https://geoglows.ecmwf.int/api&#39;</span>
+<span class="nd">@controller</span>
+<span class="k">def</span> <span class="nf">home</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Controller for the app home page.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+
+    <span class="n">things_list</span> <span class="o">=</span> <span class="n">get_things</span><span class="p">()</span>
+
+    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s1">&#39;things_list&#39;</span><span class="p">:</span> <span class="n">things_list</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">render</span><span class="p">(</span><span class="n">request</span><span class="p">,</span> <span class="s1">&#39;hydroserver_client/home.html&#39;</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">get_things</span><span class="p">():</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">}</span>
+    <span class="n">things</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">url_things</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">HYDROSERVER_ENDPOINT</span><span class="si">}</span><span class="s1">/api/data/things&#39;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url_things</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">things</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">things</span>
+
+<span class="nd">@controller</span>
+<span class="k">def</span> <span class="nf">get_datastreams</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">datastreams_list</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;datastreams&#39;</span><span class="p">:[]}</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">}</span>
+    <span class="n">datastream_id</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">request</span><span class="p">)[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="c1"># breakpoint()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">url_datastreams</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">HYDROSERVER_ENDPOINT</span><span class="si">}</span><span class="s1">/api/data/things/</span><span class="si">{</span><span class="n">datastream_id</span><span class="si">}</span><span class="s1">/datastreams&#39;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url_datastreams</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">datastreams_list</span><span class="p">[</span><span class="s1">&#39;datastreams&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">JsonResponse</span><span class="p">(</span><span class="n">datastreams_list</span><span class="p">)</span>
+
+
+<span class="nd">@controller</span>
+<span class="k">def</span> <span class="nf">get_observed_values</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="n">data_list</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;data_series&#39;</span><span class="p">:[]}</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;accept&#39;</span><span class="p">:</span> <span class="s1">&#39;application/json&#39;</span><span class="p">}</span>
+    <span class="n">datastream_id</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">request</span><span class="p">)[</span><span class="s1">&#39;id&#39;</span><span class="p">]</span>
+    <span class="c1"># breakpoint()</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">url_observed_Values</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">HYDROSERVER_ENDPOINT</span><span class="si">}</span><span class="s1">/api/sensorthings/v1.1/Datastreams(</span><span class="si">{</span><span class="n">datastream_id</span><span class="si">}</span><span class="s1">)/Observations?$resultFormat=dataArray&amp;$top=1000&#39;</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url_observed_Values</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">data_list</span><span class="p">[</span><span class="s1">&#39;data_series&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;value&#39;</span><span class="p">,[])[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dataArray&#39;</span><span class="p">,[])</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">JsonResponse</span><span class="p">(</span><span class="n">data_list</span><span class="p">)</span>
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>add a change event in the radio buttons to plot the datastream data, so you can see oberserved values in <cite>main.js</cite></p></li>
+</ol>
+<div class="highlight-javascript notranslate"><div class="highlight"><pre><span></span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">    </span><span class="kd">function</span><span class="w"> </span><span class="nx">getCookie</span><span class="p">(</span><span class="nx">name</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">cookieValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">cookie</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="s1">&#39;(^|;)\\s*&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nx">name</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s1">&#39;\\s*=\\s*([^;]+)&#39;</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">cookieValue</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">cookieValue</span><span class="p">.</span><span class="nx">pop</span><span class="p">()</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">csrftoken</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">getCookie</span><span class="p">(</span><span class="s1">&#39;csrftoken&#39;</span><span class="p">);</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">makeVectorLayerForMaker</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">map</span><span class="p">,</span><span class="nx">type_marker</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;{</span>
+<span class="w">        </span><span class="c1">// Assuming &#39;map&#39; is your OpenLayers map</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">vectorLayer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">layer</span><span class="p">.</span><span class="nx">Vector</span><span class="p">({</span>
+<span class="w">            </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">source</span><span class="p">.</span><span class="nx">Vector</span><span class="p">(),</span>
+<span class="w">            </span><span class="nx">style</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">Style</span><span class="p">({</span>
+<span class="w">                </span><span class="nx">image</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">Circle</span><span class="p">({</span>
+<span class="w">                    </span><span class="nx">radius</span><span class="o">:</span><span class="w"> </span><span class="mf">7</span><span class="p">,</span>
+<span class="w">                    </span><span class="nx">fill</span><span class="o">:</span><span class="w"> </span><span class="nx">type_marker</span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;geoglows&#39;</span><span class="o">?</span>
+<span class="w">                        </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">Fill</span><span class="p">({</span>
+<span class="w">                            </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;#72B01D&#39;</span><span class="p">,</span>
+<span class="w">                        </span><span class="p">})</span><span class="o">:</span>
+<span class="w">                        </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">Fill</span><span class="p">({</span>
+<span class="w">                            </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;#8e44ad&#39;</span><span class="p">,</span>
+<span class="w">                        </span><span class="p">})</span>
+<span class="w">                    </span><span class="p">,</span>
+<span class="w">                    </span><span class="nx">stroke</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">Stroke</span><span class="p">({</span>
+<span class="w">                    </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;white&#39;</span><span class="p">,</span>
+<span class="w">                    </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span>
+<span class="w">                    </span><span class="p">}),</span>
+<span class="w">                </span><span class="p">}),</span>
+<span class="w">            </span><span class="p">})</span>
+<span class="w">        </span><span class="p">});</span>
+<span class="w">        </span><span class="nx">map</span><span class="p">.</span><span class="nx">addLayer</span><span class="p">(</span><span class="nx">vectorLayer</span><span class="p">);</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">myStyle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">Style</span><span class="p">({</span>
+<span class="w">            </span><span class="nx">image</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">Circle</span><span class="p">({</span>
+<span class="w">            </span><span class="nx">radius</span><span class="o">:</span><span class="w"> </span><span class="mf">7</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">fill</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">Fill</span><span class="p">({</span><span class="w"> </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;blue&#39;</span><span class="w"> </span><span class="p">}),</span>
+<span class="w">            </span><span class="nx">stroke</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">style</span><span class="p">.</span><span class="nx">Stroke</span><span class="p">({</span>
+<span class="w">                </span><span class="nx">color</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;white&#39;</span><span class="p">,</span>
+<span class="w">                </span><span class="nx">width</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">            </span><span class="p">}),</span>
+<span class="w">            </span><span class="p">}),</span>
+<span class="w">        </span><span class="p">});</span>
+
+<span class="w">        </span><span class="c1">// Add hover interaction</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">selectPointerMove</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">interaction</span><span class="p">.</span><span class="nx">Select</span><span class="p">({</span>
+<span class="w">            </span><span class="nx">condition</span><span class="o">:</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">events</span><span class="p">.</span><span class="nx">condition</span><span class="p">.</span><span class="nx">pointerMove</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">layers</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="nx">vectorLayer</span><span class="p">],</span>
+<span class="w">            </span><span class="nx">style</span><span class="o">:</span><span class="w"> </span><span class="nx">myStyle</span><span class="p">,</span><span class="w"> </span><span class="c1">// Apply the same style on hover</span>
+<span class="w">        </span><span class="p">});</span>
+
+<span class="w">        </span><span class="nx">map</span><span class="p">.</span><span class="nx">addInteraction</span><span class="p">(</span><span class="nx">selectPointerMove</span><span class="p">);</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="nx">vectorLayer</span>
+<span class="w">    </span><span class="p">}</span>
+
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">addInteraction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">map</span><span class="p">,</span><span class="nx">source_draw</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;{</span>
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">draw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">interaction</span><span class="p">.</span><span class="nx">Draw</span><span class="p">({</span>
+<span class="w">            </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="nx">source_draw</span><span class="p">,</span>
+<span class="w">            </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Point&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="p">});</span>
+<span class="w">        </span><span class="nx">draw</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;drawend&#39;</span><span class="p">,</span><span class="w"> </span><span class="kd">function</span><span class="p">(</span><span class="nx">evt</span><span class="p">){</span>
+<span class="w">            </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;lat-lon-id&#39;</span><span class="p">).</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`</span><span class="si">${</span><span class="nx">ol</span><span class="p">.</span><span class="nx">proj</span><span class="p">.</span><span class="nx">transform</span><span class="p">(</span><span class="nx">evt</span><span class="p">.</span><span class="nx">feature</span><span class="p">.</span><span class="nx">getGeometry</span><span class="p">().</span><span class="nx">getCoordinates</span><span class="p">(),</span><span class="w"> </span><span class="s1">&#39;EPSG:3857&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;EPSG:4326&#39;</span><span class="p">)</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+<span class="w">            </span><span class="nx">map</span><span class="p">.</span><span class="nx">removeInteraction</span><span class="p">(</span><span class="nx">draw</span><span class="p">);</span>
+<span class="w">        </span><span class="p">},</span><span class="k">this</span><span class="p">);</span>
+<span class="w">        </span><span class="nx">map</span><span class="p">.</span><span class="nx">addInteraction</span><span class="p">(</span><span class="nx">draw</span><span class="p">);</span>
+
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">initializeMap</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">source_draw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">source</span><span class="p">.</span><span class="nx">Vector</span><span class="p">({</span><span class="nx">wrapX</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">});</span>
+
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">vector_draw</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">layer</span><span class="p">.</span><span class="nx">Vector</span><span class="p">({</span>
+<span class="w">            </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="nx">source_draw</span><span class="p">,</span>
+<span class="w">        </span><span class="p">});</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">map</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nb">Map</span><span class="p">({</span>
+<span class="w">        </span><span class="nx">target</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;map&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">layers</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<span class="w">        </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">layer</span><span class="p">.</span><span class="nx">Tile</span><span class="p">({</span>
+<span class="w">            </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">source</span><span class="p">.</span><span class="nx">OSM</span><span class="p">(),</span>
+<span class="w">        </span><span class="p">}),</span>
+<span class="w">        </span><span class="nx">vector_draw</span>
+<span class="w">        </span><span class="p">],</span>
+<span class="w">        </span><span class="nx">view</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">View</span><span class="p">({</span>
+<span class="w">        </span><span class="nx">center</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">],</span>
+<span class="w">        </span><span class="nx">zoom</span><span class="o">:</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">padding</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">170</span><span class="p">,</span><span class="w"> </span><span class="mf">100</span><span class="p">,</span><span class="w"> </span><span class="mf">100</span><span class="p">,</span><span class="w"> </span><span class="mf">150</span><span class="p">]</span>
+<span class="w">        </span><span class="p">}),</span>
+<span class="w">    </span><span class="p">});</span>
+<span class="w">        </span><span class="nx">getThings</span><span class="p">(</span><span class="nx">map</span><span class="p">);</span>
+
+<span class="w">    </span><span class="p">};</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">fetchData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">option</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">fetch</span><span class="p">(</span><span class="sb">`get-observed-values/`</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="nx">method</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;POST&#39;</span><span class="p">,</span>
+<span class="w">        </span><span class="nx">headers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="w">            </span><span class="s1">&#39;X-CSRFToken&#39;</span><span class="o">:</span><span class="w"> </span><span class="nx">csrftoken</span>
+<span class="w">        </span><span class="p">},</span>
+<span class="w">        </span><span class="nx">body</span><span class="o">:</span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="o">:</span><span class="nx">option</span><span class="p">})</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">        </span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">response</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">response</span><span class="p">.</span><span class="nx">ok</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;Network response was not ok&#39;</span><span class="p">);</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="k">return</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="w">        </span><span class="p">})</span>
+<span class="w">        </span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">data</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="nx">ts_data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;data_series&#39;</span><span class="p">]</span>
+
+<span class="w">            </span><span class="kd">var</span><span class="w"> </span><span class="nx">data_element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span>
+<span class="w">                </span><span class="p">{</span>
+<span class="w">                </span><span class="nx">x</span><span class="o">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">                </span><span class="nx">y</span><span class="o">:</span><span class="w"> </span><span class="p">[],</span>
+<span class="w">                </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;scatter&#39;</span>
+<span class="w">                </span><span class="p">}</span>
+<span class="w">            </span><span class="p">];</span>
+
+<span class="w">            </span><span class="nx">ts_data</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(([</span><span class="nx">dateStr</span><span class="p">,</span><span class="w"> </span><span class="nx">value</span><span class="p">])</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="kd">const</span><span class="w"> </span><span class="nx">date</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(</span><span class="nx">dateStr</span><span class="p">);</span>
+<span class="w">                </span><span class="nx">data_element</span><span class="p">[</span><span class="mf">0</span><span class="p">][</span><span class="s1">&#39;x&#39;</span><span class="p">].</span><span class="nx">push</span><span class="p">(</span><span class="nx">date</span><span class="p">.</span><span class="nx">toISOString</span><span class="p">().</span><span class="nx">slice</span><span class="p">(</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">10</span><span class="p">));</span>
+<span class="w">                </span><span class="nx">value</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="nx">data_element</span><span class="p">[</span><span class="mf">0</span><span class="p">][</span><span class="s1">&#39;y&#39;</span><span class="p">].</span><span class="nx">push</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="kc">null</span><span class="p">;</span>
+<span class="w">            </span><span class="p">});</span>
+
+<span class="w">            </span><span class="nx">Plotly</span><span class="p">.</span><span class="nx">newPlot</span><span class="p">(</span><span class="s1">&#39;ts_chart&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">data_element</span><span class="p">);</span>
+
+<span class="w">        </span><span class="p">})</span>
+<span class="w">        </span><span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Error:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="w">            </span><span class="c1">// Handle errors if any</span>
+<span class="w">        </span><span class="p">});</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">makeTableData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">thing</span><span class="p">)=&gt;{</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">keys</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">thing</span><span class="p">);</span>
+<span class="w">        </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">key</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">keys</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="kd">let</span><span class="w"> </span><span class="nx">id_table</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`id-</span><span class="si">${</span><span class="nx">key</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">element</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="nx">id_table</span><span class="p">);</span>
+<span class="w">        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">element</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kd">let</span><span class="w"> </span><span class="nx">elementContent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">thing</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span>
+<span class="w">            </span><span class="k">if</span><span class="p">(</span><span class="nx">key</span><span class="w"> </span><span class="o">==</span><span class="s1">&#39;isPrivate&#39;</span><span class="p">){</span>
+<span class="w">                </span><span class="nx">elementContent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">elementContent</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;Private&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Public&#39;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">            </span><span class="nx">element</span><span class="p">.</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">elementContent</span><span class="p">;</span>
+
+<span class="w">        </span><span class="p">}</span>
+<span class="w">        </span><span class="p">}</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">getThings</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">map</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">thingsListSerializedData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;things-list&#39;</span><span class="p">).</span><span class="nx">textContent</span><span class="p">;</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">thingsListParsedData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">thingsListSerializedData</span><span class="p">);</span>
+
+<span class="w">        </span><span class="c1">// Assuming &#39;map&#39; is your OpenLayers map</span>
+<span class="w">        </span><span class="kd">const</span><span class="w"> </span><span class="nx">vectorLayer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">makeVectorLayerForMaker</span><span class="p">(</span><span class="nx">map</span><span class="p">,</span><span class="s1">&#39;hydroserver&#39;</span><span class="p">);</span>
+
+
+<span class="w">        </span><span class="nx">map</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;pointermove&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">evt</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">evt</span><span class="p">.</span><span class="nx">dragging</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="nx">map</span><span class="p">.</span><span class="nx">getTargetElement</span><span class="p">().</span><span class="nx">style</span><span class="p">.</span><span class="nx">cursor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">map</span><span class="p">.</span><span class="nx">hasFeatureAtPixel</span><span class="p">(</span><span class="nx">map</span><span class="p">.</span><span class="nx">getEventPixel</span><span class="p">(</span><span class="nx">evt</span><span class="p">.</span><span class="nx">originalEvent</span><span class="p">))</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s1">&#39;pointer&#39;</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;&#39;</span><span class="p">;</span>
+<span class="w">            </span><span class="p">}</span>
+<span class="w">        </span><span class="p">});</span>
+<span class="w">        </span><span class="nx">thingsListParsedData</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">item</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">            </span><span class="kd">const</span><span class="w"> </span><span class="nx">marker</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">Feature</span><span class="p">({</span>
+<span class="w">                </span><span class="nx">geometry</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">geom</span><span class="p">.</span><span class="nx">Point</span><span class="p">(</span>
+<span class="w">                    </span><span class="nx">ol</span><span class="p">.</span><span class="nx">proj</span><span class="p">.</span><span class="nx">fromLonLat</span><span class="p">([</span><span class="nx">item</span><span class="p">.</span><span class="nx">longitude</span><span class="p">,</span><span class="w"> </span><span class="nx">item</span><span class="p">.</span><span class="nx">latitude</span><span class="p">])</span>
+<span class="w">                </span><span class="p">),</span>
+<span class="w">                </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="nx">item</span><span class="p">.</span><span class="nx">name</span><span class="p">,</span>
+<span class="w">                </span><span class="nx">id</span><span class="o">:</span><span class="w"> </span><span class="nx">item</span><span class="p">.</span><span class="nx">id</span><span class="p">,</span>
+<span class="w">                </span><span class="nx">description</span><span class="o">:</span><span class="w"> </span><span class="nx">item</span><span class="p">.</span><span class="nx">description</span><span class="p">,</span>
+<span class="w">                </span><span class="nx">type_marker</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;hydroserver&#39;</span>
+<span class="w">            </span><span class="p">});</span>
+<span class="w">            </span><span class="nx">vectorLayer</span><span class="p">.</span><span class="nx">getSource</span><span class="p">().</span><span class="nx">addFeature</span><span class="p">(</span><span class="nx">marker</span><span class="p">);</span>
+
+<span class="w">            </span><span class="nx">map</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;singleclick&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">evt</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                </span><span class="kd">const</span><span class="w"> </span><span class="nx">feature</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">map</span><span class="p">.</span><span class="nx">forEachFeatureAtPixel</span><span class="p">(</span><span class="nx">evt</span><span class="p">.</span><span class="nx">pixel</span><span class="p">,</span><span class="w"> </span><span class="nx">f</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">f</span><span class="p">);</span>
+<span class="w">                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">feature</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="nx">marker</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                    </span><span class="k">if</span><span class="p">(</span><span class="nx">feature</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;type_marker&#39;</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;hydroserver&#39;</span><span class="p">){</span>
+<span class="w">                        </span><span class="nx">makeTableData</span><span class="p">(</span><span class="nx">item</span><span class="p">);</span>
+<span class="w">                        </span><span class="nx">fetch</span><span class="p">(</span><span class="sb">`get-datastreams/`</span><span class="p">,{</span>
+<span class="w">                            </span><span class="nx">method</span><span class="o">:</span><span class="s1">&#39;POST&#39;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nx">headers</span><span class="o">:</span><span class="p">{</span>
+<span class="w">                                </span><span class="s1">&#39;Content-Type&#39;</span><span class="o">:</span><span class="s1">&#39;application/json&#39;</span><span class="p">,</span>
+<span class="w">                                </span><span class="s1">&#39;X-CSRFToken&#39;</span><span class="o">:</span><span class="nx">csrftoken</span><span class="p">,</span>
+<span class="w">                            </span><span class="p">},</span>
+<span class="w">                            </span><span class="nx">body</span><span class="o">:</span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">({</span><span class="s1">&#39;id&#39;</span><span class="o">:</span><span class="nx">feature</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;id&#39;</span><span class="p">)})</span>
+<span class="w">                        </span><span class="p">})</span>
+<span class="w">                        </span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">response</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                        </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">response</span><span class="p">.</span><span class="nx">ok</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                            </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;Network response was not ok&#39;</span><span class="p">);</span>
+<span class="w">                        </span><span class="p">}</span>
+<span class="w">                        </span><span class="k">return</span><span class="w"> </span><span class="nx">response</span><span class="p">.</span><span class="nx">json</span><span class="p">();</span>
+<span class="w">                        </span><span class="p">})</span>
+<span class="w">                        </span><span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">data</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                        </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;table-item-metadata&#39;</span><span class="p">).</span><span class="nx">style</span><span class="p">.</span><span class="nx">display</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;block&quot;</span>
+<span class="w">                        </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s2">&quot;prompt-click&quot;</span><span class="p">).</span><span class="nx">style</span><span class="p">.</span><span class="nx">display</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;none&quot;</span><span class="p">;</span>
+<span class="w">                        </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;title-thing&#39;</span><span class="p">).</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w">  </span><span class="nx">item</span><span class="p">.</span><span class="nx">name</span><span class="p">;</span>
+
+<span class="w">                        </span><span class="kd">let</span><span class="w"> </span><span class="nx">data_streams</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">data</span><span class="p">[</span><span class="s1">&#39;datastreams&#39;</span><span class="p">];</span>
+<span class="w">                        </span><span class="kd">let</span><span class="w"> </span><span class="nx">radio_btn</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">``</span>
+<span class="w">                        </span><span class="nx">data_streams</span><span class="p">.</span><span class="nx">forEach</span><span class="p">((</span><span class="nx">datastream_item</span><span class="p">)=&gt;{</span>
+<span class="w">                            </span><span class="nx">radio_btn</span><span class="w"> </span><span class="o">+=</span><span class="w"> </span><span class="sb">`&lt;input type=&quot;radio&quot; id=&quot;</span><span class="si">${</span><span class="nx">datastream_item</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="sb">&quot; name=&quot;datastreams&quot; value=&quot;</span><span class="si">${</span><span class="nx">datastream_item</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="sb">&quot;&gt;</span>
+<span class="sb">                            &lt;label for=&quot;</span><span class="si">${</span><span class="nx">datastream_item</span><span class="p">.</span><span class="nx">id</span><span class="si">}</span><span class="sb">&quot;&gt;</span><span class="si">${</span><span class="nx">datastream_item</span><span class="p">.</span><span class="nx">description</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)[</span><span class="mf">0</span><span class="p">]</span><span class="si">}</span><span class="sb">&lt;/label&gt;&lt;br&gt;`</span>
+<span class="w">                        </span><span class="p">})</span>
+<span class="w">                        </span><span class="kd">const</span><span class="w"> </span><span class="nx">coordinates</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">feature</span><span class="p">.</span><span class="nx">getGeometry</span><span class="p">().</span><span class="nx">getCoordinates</span><span class="p">();</span>
+<span class="w">                        </span><span class="kd">const</span><span class="w"> </span><span class="nx">popupContent</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`&lt;h3&gt;&lt;strong&gt;</span><span class="si">${</span><span class="nx">feature</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span><span class="si">}</span><span class="sb">&lt;/strong&gt;&lt;/h3&gt;</span>
+<span class="sb">                                                &lt;p&gt;</span><span class="si">${</span><span class="nx">feature</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;description&#39;</span><span class="p">)</span><span class="si">}</span><span class="sb">&lt;/p&gt;</span>
+<span class="sb">                                                &lt;form&gt;</span>
+<span class="sb">                                                    &lt;fieldset&gt;</span>
+<span class="sb">                                                    &lt;/legend&gt;&lt;strong&gt;Datastreams&lt;/strong&gt;&lt;/legend&gt;</span>
+<span class="sb">                                                    &lt;div&gt;</span>
+<span class="sb">                                                    </span><span class="si">${</span><span class="nx">radio_btn</span><span class="si">}</span>
+<span class="sb">                                                    &lt;/div&gt;</span>
+<span class="sb">                                                    &lt;/fieldset&gt;</span>
+<span class="sb">                                                &lt;/form&gt;</span>
+<span class="sb">                                                &lt;br&gt;</span>
+<span class="sb">                                                &lt;div id=&quot;ts_chart&quot;&gt;&lt;/div&gt;`</span>
+<span class="w">                                                </span><span class="p">;</span>
+<span class="w">                        </span><span class="kd">const</span><span class="w"> </span><span class="nx">popup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">ol</span><span class="p">.</span><span class="nx">Overlay</span><span class="p">({</span>
+<span class="w">                            </span><span class="nx">element</span><span class="o">:</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;popup&#39;</span><span class="p">),</span>
+<span class="w">                            </span><span class="nx">positioning</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;bottom-center&#39;</span><span class="p">,</span>
+<span class="w">                            </span><span class="nx">stopEvent</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<span class="w">                            </span><span class="nx">offset</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="mf">10</span><span class="p">]</span>
+<span class="w">                        </span><span class="p">});</span>
+<span class="w">                        </span><span class="nx">map</span><span class="p">.</span><span class="nx">addOverlay</span><span class="p">(</span><span class="nx">popup</span><span class="p">);</span>
+<span class="w">                        </span><span class="nx">popup</span><span class="p">.</span><span class="nx">setPosition</span><span class="p">(</span><span class="nx">coordinates</span><span class="p">);</span>
+<span class="w">                        </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;popup-content&#39;</span><span class="p">).</span><span class="nx">innerHTML</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">popupContent</span><span class="p">;</span>
+
+<span class="w">                        </span><span class="kd">var</span><span class="w"> </span><span class="nx">closer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;popup-closer&#39;</span><span class="p">);</span>
+<span class="w">                        </span><span class="nx">closer</span><span class="p">.</span><span class="nx">onclick</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kd">function</span><span class="p">()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                            </span><span class="nx">popup</span><span class="p">.</span><span class="nx">setPosition</span><span class="p">(</span><span class="kc">undefined</span><span class="p">);</span>
+<span class="w">                            </span><span class="nx">closer</span><span class="p">.</span><span class="nx">blur</span><span class="p">();</span>
+<span class="w">                            </span><span class="k">return</span><span class="w"> </span><span class="kc">false</span><span class="p">;</span>
+<span class="w">                        </span><span class="p">};</span>
+
+<span class="w">                            </span><span class="nb">document</span><span class="p">.</span><span class="nx">querySelectorAll</span><span class="p">(</span><span class="s1">&#39;input[name=&quot;datastreams&quot;]&#39;</span><span class="p">).</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">radio</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">                                </span><span class="nx">radio</span><span class="p">.</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">event</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+
+<span class="w">                                </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">checked</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                                    </span><span class="nx">fetchData</span><span class="p">(</span><span class="nx">event</span><span class="p">.</span><span class="nx">target</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+<span class="w">                                </span><span class="p">}</span>
+<span class="w">                                </span><span class="p">});</span>
+<span class="w">                            </span><span class="p">});</span>
+<span class="w">                        </span><span class="p">})</span>
+<span class="w">                        </span><span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="w">                        </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;There was a problem with the fetch operation:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">);</span>
+<span class="w">                        </span><span class="p">});</span>
+
+
+
+
+<span class="w">                    </span><span class="p">}</span>
+
+<span class="w">                </span><span class="p">}</span>
+
+<span class="w">            </span><span class="p">});</span>
+<span class="w">        </span><span class="p">});</span>
+
+<span class="w">        </span><span class="nx">map</span><span class="p">.</span><span class="nx">getView</span><span class="p">().</span><span class="nx">fit</span><span class="p">(</span><span class="nx">vectorLayer</span><span class="p">.</span><span class="nx">getSource</span><span class="p">().</span><span class="nx">getExtent</span><span class="p">())</span>
+<span class="w">    </span><span class="p">};</span>
+
+
+
+<span class="w">    </span><span class="nx">initializeMap</span><span class="p">();</span>
+
+
+
+<span class="p">})();</span>
+</pre></div>
+</div>
+<p>Once you have added you should be able to retrieve data from the things in a map, with the different data streams of each thing.
+Check out answer with</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/Aquaveo/hdyroserver_client_tutorial.git
+<span class="nb">cd</span><span class="w"> </span>hdyroserver_client_tutorial
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>adding_things_timeseries
+</pre></div>
+</div>
 </section>
 <section id="saving-geoglows-reach-id">
 <h2>Saving GEOGLoWS reach_id<a class="headerlink" href="#saving-geoglows-reach-id" title="Link to this heading">¶</a></h2>

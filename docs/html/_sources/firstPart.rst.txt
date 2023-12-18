@@ -682,8 +682,412 @@ Check out answer with
 Adding TimeSeries for HydroServer
 ---------------------------------
 
-1. Making markers interactive
-2. Calling the API
+1. First we need to add the CDN dependencie for Plotly.js in the `base.html` 
+.. code-block:: html
+
+
+    {% extends "tethys_apps/app_base.html" %}
+
+    {% load static %}
+
+    {% block title %}{{ tethys_app.name }}{% endblock %}
+
+    {% block app_icon %}
+    {# The path you provided in your app.py is accessible through the tethys_app.icon context variable #}
+    <img src="{% if 'http' in tethys_app.icon %}{{ tethys_app.icon }}{% else %}{% static tethys_app.icon %}{% endif %}" />
+    {% endblock %}
+
+    {# The name you provided in your app.py is accessible through the tethys_app.name context variable #}
+    {% block app_title %}{{ tethys_app.name }}{% endblock %}
+
+    {% block app_navigation_items %}
+    {% endblock %}
+
+    {% block app_content %}
+    {% endblock %}
+
+    {% block app_actions %}
+    {% endblock %}
+
+    {% block content_dependent_styles %}
+    {{ block.super }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v8.2.0/ol.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="{% static 'hydroserver_client/css/main.css' %}" rel="stylesheet"/>
+    {% endblock %}
+
+    {% block scripts %}
+    {{ block.super }}
+    <script src="https://cdn.jsdelivr.net/npm/ol@v8.2.0/dist/ol.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/js/all.min.js" integrity="sha512-GWzVrcGlo0TxTRvz9ttioyYJ+Wwk9Ck0G81D+eO63BaqHaJ3YZX9wuqjwgfcV/MrB2PhaVX9DkYVhbFpStnqpQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src='https://cdn.plot.ly/plotly-2.27.0.min.js'></script>
+
+
+    {% endblock %}
+
+1. Add the following function in the `controllers.py` to retrieve the observed values
+
+.. code-block:: python
+
+
+    import requests
+    import json
+    from django.shortcuts import render
+    from tethys_sdk.routing import controller
+    from django.http import JsonResponse
+
+
+    HYDROSERVER_ENDPOINT = 'https://hydroserver.geoglows.org'
+    GEOGLOWS_ENDPOINT ='https://geoglows.ecmwf.int/api'
+    @controller
+    def home(request):
+        """
+        Controller for the app home page.
+        """
+        
+
+        things_list = get_things()
+
+        context = {
+            'things_list': things_list,
+        }
+
+        return render(request, 'hydroserver_client/home.html', context)
+
+    def get_things():
+        headers = {'accept': 'application/json'}
+        things = []
+
+        try:
+            url_things = f'{HYDROSERVER_ENDPOINT}/api/data/things'
+            response = requests.get(url_things, headers=headers)
+            if response.status_code == 200:
+                things = response.json()
+        except Exception as e:
+            print(e)
+        return things
+
+    @controller
+    def get_datastreams(request):
+        datastreams_list={'datastreams':[]}
+        headers = {'accept': 'application/json'}
+        datastream_id = json.load(request)['id']
+        # breakpoint()
+        try:
+            url_datastreams = f'{HYDROSERVER_ENDPOINT}/api/data/things/{datastream_id}/datastreams'
+            response = requests.get(url_datastreams, headers=headers)
+            if response.status_code == 200:
+                datastreams_list['datastreams'] = response.json()
+        except Exception as e:
+            print(e)
+
+        return JsonResponse(datastreams_list)
+
+
+    @controller
+    def get_observed_values(request):
+        data_list={'data_series':[]}
+        headers = {'accept': 'application/json'}
+        datastream_id = json.load(request)['id']
+        # breakpoint()
+        try:
+            url_observed_Values = f'{HYDROSERVER_ENDPOINT}/api/sensorthings/v1.1/Datastreams({datastream_id})/Observations?$resultFormat=dataArray&$top=1000'
+            response = requests.get(url_observed_Values, headers=headers)
+            if response.status_code == 200:
+                data_list['data_series'] = response.json().get('value',[])[0].get('dataArray',[])
+        except Exception as e:
+            print(e)
+
+        return JsonResponse(data_list)
+
+2. add a change event in the radio buttons to plot the datastream data, so you can see oberserved values in `main.js`
+
+.. code-block:: javascript
+
+
+    (() => {
+
+        function getCookie(name) {
+            const cookieValue = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+            return cookieValue ? cookieValue.pop() : '';
+        }
+        
+        const csrftoken = getCookie('csrftoken');
+
+        const makeVectorLayerForMaker = (map,type_marker) =>{
+            // Assuming 'map' is your OpenLayers map
+            const vectorLayer = new ol.layer.Vector({
+                source: new ol.source.Vector(),
+                style: new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 7,
+                        fill: type_marker== 'geoglows'? 
+                            new ol.style.Fill({
+                                color: '#72B01D',
+                            }):
+                            new ol.style.Fill({
+                                color: '#8e44ad',
+                            })
+                        ,
+                        stroke: new ol.style.Stroke({
+                        color: 'white',
+                        width: 1,
+                        }),
+                    }),
+                })
+            });
+            map.addLayer(vectorLayer);
+            const myStyle = new ol.style.Style({
+                image: new ol.style.Circle({
+                radius: 7,
+                fill: new ol.style.Fill({ color: 'blue' }),
+                stroke: new ol.style.Stroke({
+                    color: 'white',
+                    width: 2,
+                }),
+                }),
+            });
+
+            // Add hover interaction
+            const selectPointerMove = new ol.interaction.Select({
+                condition: ol.events.condition.pointerMove,
+                layers: [vectorLayer],
+                style: myStyle, // Apply the same style on hover
+            });
+        
+            map.addInteraction(selectPointerMove);
+            return vectorLayer
+        }
+
+
+        const addInteraction = (map,source_draw) =>{
+            let draw = new ol.interaction.Draw({
+                source: source_draw,
+                type: 'Point',
+            });
+            draw.on('drawend', function(evt){
+                document.getElementById('lat-lon-id').innerHTML = `${ol.proj.transform(evt.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326')}`;
+                map.removeInteraction(draw);
+            },this);
+            map.addInteraction(draw);
+
+        }
+
+        const initializeMap = () => {
+            const source_draw = new ol.source.Vector({wrapX: false});
+
+            const vector_draw = new ol.layer.Vector({
+                source: source_draw,
+            });
+
+        const map = new ol.Map({
+            target: 'map',
+            layers: [
+            new ol.layer.Tile({
+                source: new ol.source.OSM(),
+            }),
+            vector_draw
+            ],
+            view: new ol.View({
+            center: [0, 0],
+            zoom: 2,
+            padding: [170, 100, 100, 150]
+            }),
+        });
+            getThings(map);
+            
+        };
+
+        const fetchData = (option) => {
+            fetch(`get-observed-values/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body:JSON.stringify({'id':option})
+            })
+            .then(response => {
+                if (!response.ok) {
+                throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+
+                let ts_data = data['data_series']
+
+                var data_element = [
+                    {
+                    x: [],
+                    y: [],
+                    type: 'scatter'
+                    }
+                ];
+                                
+                ts_data.forEach(([dateStr, value]) => {
+                    const date = new Date(dateStr);
+                    data_element[0]['x'].push(date.toISOString().slice(0, 10)); 
+                    value > 0 ? data_element[0]['y'].push(value) : null;
+                });
+
+                Plotly.newPlot('ts_chart', data_element);
+
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Handle errors if any
+            });
+        }
+
+        const makeTableData = (thing)=>{
+            const keys = Object.keys(thing);
+            for (const key of keys) {
+
+            let id_table = `id-${key}`;
+
+            const element = document.getElementById(id_table);
+            if (element) {
+                let elementContent = thing[key]
+                if(key =='isPrivate'){
+                    elementContent = elementContent ? 'Private' : 'Public'
+                }
+                element.innerHTML = elementContent;
+                
+            }
+            }
+        }
+
+        const getThings = (map) => {
+
+            const thingsListSerializedData = document.getElementById('things-list').textContent;
+            const thingsListParsedData = JSON.parse(thingsListSerializedData);
+
+            // Assuming 'map' is your OpenLayers map
+            const vectorLayer = makeVectorLayerForMaker(map,'hydroserver');
+    
+
+            map.on('pointermove', evt => {
+                if (!evt.dragging) {
+                map.getTargetElement().style.cursor = map.hasFeatureAtPixel(map.getEventPixel(evt.originalEvent)) ? 'pointer' : '';
+                }
+            });
+            thingsListParsedData.forEach(item => {
+                const marker = new ol.Feature({
+                    geometry: new ol.geom.Point(
+                        ol.proj.fromLonLat([item.longitude, item.latitude])
+                    ),
+                    name: item.name,
+                    id: item.id,
+                    description: item.description,
+                    type_marker: 'hydroserver'
+                });
+                vectorLayer.getSource().addFeature(marker);
+
+                map.on('singleclick', evt => {
+                    const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
+                    if (feature === marker) {
+                        if(feature.get('type_marker') == 'hydroserver'){
+                            makeTableData(item);
+                            fetch(`get-datastreams/`,{
+                                method:'POST',
+                                headers:{
+                                    'Content-Type':'application/json',
+                                    'X-CSRFToken':csrftoken,
+                                }, 
+                                body:JSON.stringify({'id':feature.get('id')})
+                            })
+                            .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Network response was not ok');
+                            }
+                            return response.json();
+                            })
+                            .then(data => {
+                            document.getElementById('table-item-metadata').style.display = "block"
+                            document.getElementById("prompt-click").style.display = "none";
+                            document.getElementById('title-thing').innerHTML =  item.name;
+        
+                            let data_streams = data['datastreams'];
+                            let radio_btn = ``
+                            data_streams.forEach((datastream_item)=>{
+                                radio_btn += `<input type="radio" id="${datastream_item.id}" name="datastreams" value="${datastream_item.id}">
+                                <label for="${datastream_item.id}">${datastream_item.description.split('-')[0]}</label><br>`
+                            })
+                            const coordinates = feature.getGeometry().getCoordinates();
+                            const popupContent = `<h3><strong>${feature.get('name')}</strong></h3>
+                                                    <p>${feature.get('description')}</p>
+                                                    <form>
+                                                        <fieldset>
+                                                        </legend><strong>Datastreams</strong></legend>
+                                                        <div>
+                                                        ${radio_btn}
+                                                        </div>
+                                                        </fieldset>
+                                                    </form>
+                                                    <br>
+                                                    <div id="ts_chart"></div>`
+                                                    ;              
+                            const popup = new ol.Overlay({
+                                element: document.getElementById('popup'),
+                                positioning: 'bottom-center',
+                                stopEvent: false,
+                                offset: [0, -10]
+                            });
+                            map.addOverlay(popup);
+                            popup.setPosition(coordinates);
+                            document.getElementById('popup-content').innerHTML = popupContent;
+        
+                            var closer = document.getElementById('popup-closer');
+                            closer.onclick = function() {
+                                popup.setPosition(undefined);
+                                closer.blur();
+                                return false;
+                            };
+        
+                                document.querySelectorAll('input[name="datastreams"]').forEach(radio => {
+
+                                    radio.addEventListener('change', event => {
+    
+                                    if (event.target.checked) {
+                                        fetchData(event.target.value);
+                                    }
+                                    });
+                                });
+                            })
+                            .catch(error => {
+                            console.error('There was a problem with the fetch operation:', error);
+                            });
+        
+        
+        
+        
+                        }
+
+                    }
+
+                });
+            });
+
+            map.getView().fit(vectorLayer.getSource().getExtent())
+        };
+
+
+
+        initializeMap();
+
+
+
+    })();
+
+Once you have added you should be able to retrieve data from the things in a map, with the different data streams of each thing. 
+Check out answer with
+
+.. code-block:: bash
+
+    git clone https://github.com/Aquaveo/hdyroserver_client_tutorial.git
+    cd hdyroserver_client_tutorial
+    git checkout -b adding_things_timeseries
 
 Saving GEOGLoWS reach_id
 ------------------------
