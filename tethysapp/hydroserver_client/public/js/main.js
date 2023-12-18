@@ -52,128 +52,6 @@
         return vectorLayer
     }
 
-    const saveStation = (map) =>{
-        
-        let coordinateString = document.getElementById('lat-lon-id').textContent;
-        const [lon, lat] = coordinateString.split(',');
-        if(!coordinateString){return}
-
-        fetch(`save-geoglows-station/`,{
-            method:'POST',
-            headers:{
-                'Content-Type':'application/json',
-                'X-CSRFToken':csrftoken,
-               }, 
-            body:JSON.stringify({'lat':lat,'lon':lon})
-        })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Network response was not ok');
-          }
-          return response.json();
-        })
-        .then(data => {
-
-
-            const vectorLayer = makeVectorLayerForMaker(map,'geoglows');
-            const marker = new ol.Feature({
-                geometry: new ol.geom.Point(
-                    ol.proj.fromLonLat([data.longitude, data.latitude])
-                ),
-                distance: data.distance,
-                reach_id: data.reach_id,
-                region: data.region,
-                type_marker:'geoglows'
-            });
-            vectorLayer.getSource().addFeature(marker);
-
-
-            map.on('singleclick', evt => {
-                document.getElementById('table-item-metadata').style.display = "none"
-                document.getElementById('title-thing').style.display = "none"
-                const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
-                if (feature === marker) {
-                    if(feature.get('type_marker') == 'geoglows'){
-
-                        fetch(`get-geoglows-forecast/`,{
-                            method:'POST',
-                            headers:{
-                                'Content-Type':'application/json',
-                                'X-CSRFToken':csrftoken,
-                               }, 
-                            body:JSON.stringify({'reach_id':feature.get('reach_id')})
-                        })
-                        .then(response => {
-                          if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                          }
-                          return response.json();
-                        })
-                        .then(data => {
-
-    
-                          const coordinates = feature.getGeometry().getCoordinates();
-                          const popupContent = `<h3><strong>Reach ID - ${feature.get('reach_id')}</strong></h3>
-                                                  <p>Region - ${feature.get('region')}</p>
-                                                  <br>
-                                                  <div id="ts_chart"></div>`
-                                                  ;              
-                          const popup = new ol.Overlay({
-                              element: document.getElementById('popup'),
-                              positioning: 'bottom-center',
-                              stopEvent: false,
-                              offset: [0, -10]
-                          });
-                          map.addOverlay(popup);
-                          popup.setPosition(coordinates);
-                          document.getElementById('popup-content').innerHTML = popupContent;
-    
-                          var closer = document.getElementById('popup-closer');
-                          closer.onclick = function() {
-                              popup.setPosition(undefined);
-                              closer.blur();
-                              return false;
-                          };
-                          var data_element = [
-                            {
-                              x: data['time'],
-                              y: data['values'],
-                              type: 'scatter'
-                            }
-                          ];
-                                        
-                          Plotly.newPlot('ts_chart', data_element);
-                        })
-                        .catch(error => {
-                          console.error('There was a problem with the fetch operation:', error);
-                        });
-    
-                    }
-                }
-
-            });
-
-
-
-
-        })
-        .catch(error => {
-          console.error('There was a problem with the fetch operation:', error);
-        });
-    }
-    const addInteraction = (map,source_draw) =>{
-        let draw = new ol.interaction.Draw({
-            source: source_draw,
-            type: 'Point',
-        });
-        draw.on('drawend', function(evt){
-            document.getElementById('lat-lon-id').innerHTML = `${ol.proj.transform(evt.feature.getGeometry().getCoordinates(), 'EPSG:3857', 'EPSG:4326')}`;
-            map.removeInteraction(draw);
-        },this);
-        map.addInteraction(draw);
-
-    }
-
     const initializeMap = () => {
         const source_draw = new ol.source.Vector({wrapX: false});
 
@@ -196,22 +74,6 @@
         }),
       });
         getThings(map);
-        getReaches(map);
-        
-        document.getElementById('btn-add-station').addEventListener('click',function(event){
-            event.preventDefault();
-            var features = source_draw.getFeatures();
-            var lastFeature = features[features.length - 1];
-            source_draw.removeFeature(lastFeature);
-            addInteraction(map,source_draw);
-        })
-        document.getElementById('btn-save-station').addEventListener('click',function(event){
-            event.preventDefault();
-            var features = source_draw.getFeatures();
-            var lastFeature = features[features.length - 1];
-            source_draw.removeFeature(lastFeature);
-            saveStation(map)
-        })
     };
 
     const fetchData = (option) => {
@@ -366,7 +228,7 @@
                                 radio.addEventListener('change', event => {
   
                                 if (event.target.checked) {
-                                    fetchData(event.target.value);
+                                    console.log(event.target.value);
                                 }
                                 });
                             });
@@ -388,98 +250,6 @@
         map.getView().fit(vectorLayer.getSource().getExtent())
     };
 
-
-    const getReaches = (map) =>{
-        const reachesListSerializedData = document.getElementById('reach-list').textContent;
-        const reachessListParsedData = JSON.parse(reachesListSerializedData);
-
-        // Assuming 'map' is your OpenLayers map
-        const vectorLayer = makeVectorLayerForMaker(map,'geoglows');
-        map.on('pointermove', evt => {
-            if (!evt.dragging) {
-              map.getTargetElement().style.cursor = map.hasFeatureAtPixel(map.getEventPixel(evt.originalEvent)) ? 'pointer' : '';
-            }
-        });
-        reachessListParsedData.forEach(item => {
-            const marker = new ol.Feature({
-                geometry: new ol.geom.Point(
-                    ol.proj.fromLonLat([item.longitude, item.latitude])
-                ),
-                distance: item.distance,
-                reach_id: item.reach_id,
-                region: item.region,
-                type_marker:'geoglows'
-            });
-            
-            vectorLayer.getSource().addFeature(marker);
-            map.on('singleclick', evt => {
-                
-                const feature = map.forEachFeatureAtPixel(evt.pixel, f => f);
-                if (feature === marker) {
-                    if(feature.get('type_marker') == 'geoglows'){
-                        document.getElementById('table-item-metadata').style.display = "none"
-                        document.getElementById('title-thing').style.display = "none"
-                        fetch(`get-geoglows-forecast/`,{
-                            method:'POST',
-                            headers:{
-                                'Content-Type':'application/json',
-                                'X-CSRFToken':csrftoken,
-                               }, 
-                            body:JSON.stringify({'reach_id':feature.get('reach_id')})
-                        })
-                        .then(response => {
-                          if (!response.ok) {
-                            throw new Error('Network response was not ok');
-                          }
-                          return response.json();
-                        })
-                        .then(data => {
-
-    
-                          const coordinates = feature.getGeometry().getCoordinates();
-                          const popupContent = `<h3><strong>Reach ID - ${feature.get('reach_id')}</strong></h3>
-                                                  <p>Region - ${feature.get('region')}</p>
-                                                  <br>
-                                                  <div id="ts_chart"></div>`
-                                                  ;              
-                          const popup = new ol.Overlay({
-                              element: document.getElementById('popup'),
-                              positioning: 'bottom-center',
-                              stopEvent: false,
-                              offset: [0, -10]
-                          });
-                          map.addOverlay(popup);
-                          popup.setPosition(coordinates);
-                          document.getElementById('popup-content').innerHTML = popupContent;
-    
-                          var closer = document.getElementById('popup-closer');
-                          closer.onclick = function() {
-                              popup.setPosition(undefined);
-                              closer.blur();
-                              return false;
-                          };
-                          var data_element = [
-                            {
-                              x: data['time'],
-                              y: data['values'],
-                              type: 'scatter'
-                            }
-                          ];
-                                        
-                          Plotly.newPlot('ts_chart', data_element);
-                        })
-                        .catch(error => {
-                          console.error('There was a problem with the fetch operation:', error);
-                        });
-    
-                    }
-                }
-
-            });
-
-        });
-        
-    }
 
     initializeMap();
 

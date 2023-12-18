@@ -56,29 +56,6 @@
     </tbody>
   </table>
 </div>
-<div>
-  <h4>GEOGLoWS</h4>
-  <p>
-    Please click on a the following buttons to add a reach id 
-  </p>
-  <div class="wrapper_buttons"> 
-    <div>
-      <button  class="btn-artificial" id="btn-add-station">
-        <i class="fa-solid fa-location-dot"></i>Add Reach
-      </button>
-    </div>
-    
-    <div>
-      <button class="btn-artificial" id="btn-save-station">
-        <i class="fa-solid fa-floppy-disk"></i> Save Reach
-      </button>
-    </div>
-  </div>
-  
-  <p id="lat-lon-id"></p>
-
-
-</div>
 
 {% endblock %}
 
@@ -123,7 +100,6 @@
 {% block scripts %}
   {{ block.super }}
   {{ things_list|json_script:"things-list" }}
-  {{ reach_list|json_script:"reach-list" }}
   <script src="{% static 'hydroserver_client/js/main.js' %}" type="text/javascript"></script>
 
 {% endblock %}
