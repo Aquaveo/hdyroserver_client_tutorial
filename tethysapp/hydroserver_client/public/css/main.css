@@ -4,30 +4,6 @@ body {
   margin: 0;
   height: 100%;
 }
-.wrapper_buttons{
-    display: flex;
-    gap: 10px;
-}
-.btn-artificial {
-    display: inline-block;
-    padding: 10px 10px;
-    font-size: 12px;
-    font-weight: bold;
-    text-align: center;
-    text-decoration: none;
-    border: 2px solid #3498db;
-    border-radius: 5px;
-    color: #ffffff;
-    background-color: #3498db;
-    cursor: pointer;
-    transition: background-color 0.3s, color 0.3s;
-  }
-  
-  /* Define hover effect */
-  .btn-artificial:hover {
-    background-color: #2980b9;
-    color: #fff;
-  }
 
 .items-wrapper{
     margin-top: 10px;
@@ -42,10 +18,7 @@ body {
     margin-top: 10px;
     font-size: small;
 }
-#lat-lon-id{
-    font-size: small;
-    display: none;
-}
+
 #map {
     position: absolute;
     top: 50px;
