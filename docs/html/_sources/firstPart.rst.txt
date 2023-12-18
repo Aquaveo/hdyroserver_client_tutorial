@@ -596,6 +596,87 @@ Adding HydroServer Things
 
         return JsonResponse(datastreams_list)
 
+5. add the following styles:
+
+.. code-block:: css
+
+    html,
+    body {
+    margin: 0;
+    height: 100%;
+    }
+
+    .items-wrapper{
+        margin-top: 10px;
+
+    }
+    #table-item-metadata{
+        margin-top: 10px;
+        display: none;
+    }
+
+    .table-sm{
+        margin-top: 10px;
+        font-size: small;
+    }
+
+    #map {
+        position: absolute;
+        top: 50px;
+        bottom: 0;
+        width: 100%;
+        padding:0px;
+    }
+    .ol-popup {
+        position: absolute;
+        background-color: white;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #cccccc;
+        bottom: 12px;
+        left: -50px;
+        min-width: 700px;
+    }
+    .ol-popup:after, .ol-popup:before {
+        top: 100%;
+        border: solid transparent;
+        content: " ";
+        height: 0;
+        width: 0;
+        position: absolute;
+        pointer-events: none;
+    }
+    .ol-popup:after {
+        border-top-color: white;
+        border-width: 10px;
+        left: 48px;
+        margin-left: -10px;
+    }
+    .ol-popup:before {
+        border-top-color: #cccccc;
+        border-width: 11px;
+        left: 48px;
+        margin-left: -11px;
+    }
+    .ol-popup-closer {
+        text-decoration: none;
+        position: absolute;
+        top: 2px;
+        right: 8px;
+    }
+    .ol-popup-closer:after {
+        content: "✖";
+    }
+
+Once you have added you should be able to get the things in a map, with the different data streams of each one. 
+Check out answer with
+
+.. code-block:: bash
+
+    git clone https://github.com/Aquaveo/hdyroserver_client_tutorial.git
+    cd hdyroserver_client_tutorial
+    git checkout -b adding_things
 
 
 Adding TimeSeries for HydroServer
