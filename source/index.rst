@@ -16,6 +16,4 @@ Welcome to HydroClient Tutorial's documentation!
 Indices and tables
 ==================
 
-* :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
